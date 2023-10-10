@@ -52,12 +52,12 @@ public extension RealmProxiable {
 
 }
 
-public class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxiable {    
+open class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxiable {
     private var entities: Results<Entity>? {
         return query().results
     }
     
-    open var findAll: RealmQuery<Entity> {
+    var findAll: RealmQuery<Entity> {
         return query(sortProperty: "id")
     }
     
