@@ -22,7 +22,7 @@ final public class RealmQuery<T: Object> {
     
     private var deleteNotificationBlock: RealmQueryChanged?
     private var insertNotificationBlock: RealmQueryChanged?
-    private var modificateNotificationBlock: RealmQueryChanged?
+    private var updateNotificationBlock: RealmQueryChanged?
 
     private(set) var notificationToken: NotificationToken?
     private(set) var section: Int?
@@ -50,7 +50,7 @@ final public class RealmQuery<T: Object> {
 
     // MARK: - Public methods
     
-    public func addDeleteNotificationBlock<Object: AnyObject>(
+    public func onDelete<Object: AnyObject>(
         _ object: Object,
         block: @escaping (Object, [IndexPath]) -> Void
     ) -> Self {
@@ -62,7 +62,7 @@ final public class RealmQuery<T: Object> {
         return self
     }
     
-    public func addInsertNotificationBlock<Object: AnyObject>(
+    public func onInsert<Object: AnyObject>(
         _ object: Object,
         block: @escaping (Object, [IndexPath]) -> Void
     ) -> Self {
@@ -74,14 +74,14 @@ final public class RealmQuery<T: Object> {
         return self
     }
     
-    public func addModificateNotificationBlock<Object: AnyObject>(
+    public func onUpdate<Object: AnyObject>(
         _ object: Object,
         block: @escaping (Object, [IndexPath]) -> Void
     ) -> Self {
-        modificateNotificationBlock = { [weak object] (insertions) in
+        updateNotificationBlock = { [weak object] (modifications) in
             guard let weakObject = object else {return}
             
-            block(weakObject, insertions)
+            block(weakObject, modifications)
         }
         return self
     }
@@ -110,7 +110,7 @@ final public class RealmQuery<T: Object> {
                     weakSelf.insertNotificationBlock?(indexPathsForInsertions)
                 }
                 if !modifications.isEmpty {
-                    weakSelf.modificateNotificationBlock?(indexPathsForModifications)
+                    weakSelf.updateNotificationBlock?(indexPathsForModifications)
                 }
             default:
                 break

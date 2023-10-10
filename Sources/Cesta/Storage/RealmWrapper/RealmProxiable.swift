@@ -5,6 +5,7 @@
 //  Created by Jonathan Gikabu on 10/10/2023.
 //
 
+import Foundation
 import RealmSwift
 
 public enum QueryFilter {
@@ -49,4 +50,44 @@ public extension RealmProxiable {
         return RealmQuery(results: results)
     }
 
+}
+
+public class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxiable {    
+    private var entities: Results<Entity>? {
+        return query().results
+    }
+    
+    open var findAll: RealmQuery<Entity> {
+        return query(sortProperty: "id")
+    }
+    
+    func `where`(_ queryHandler: ((Query<Entity>) -> Query<Bool>)) -> RealmQuery<Entity> {
+        guard let items = entities else { return RealmQuery(results: nil) }
+        let results = items.where(queryHandler)
+        return RealmQuery(results: results)
+    }
+    
+    func append(_ entity: Entity) {
+        rm.transaction({ (realm) in
+            realm.add(entity, update: .all)
+        })
+    }
+    
+    func append(_ entities: [Entity]) {
+        rm.transaction({ (realm) in
+            realm.add(entities, update: .all)
+        })
+    }
+    
+    func delete(_ entity: Entity) {
+        rm.transaction({ (realm) in
+            realm.delete(entity)
+        })
+    }
+    
+    func delete(_ entities: [Entity]) {
+        rm.transaction({ (realm) in
+            realm.delete(entities)
+        })
+    }
 }
