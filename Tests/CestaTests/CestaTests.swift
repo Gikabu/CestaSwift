@@ -1,7 +1,7 @@
 import XCTest
-@testable import SwiftCesta
+@testable import Cesta
 
-final class SwiftCestaTests: XCTestCase {
+final class CestaTests: XCTestCase {
     func testExample() throws {
         // XCTest Documentation
         // https://developer.apple.com/documentation/xctest
