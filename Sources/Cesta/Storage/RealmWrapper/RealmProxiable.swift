@@ -62,7 +62,9 @@ open class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxi
     open var findAll: RealmQuery<Entity> {
         return query(sortProperty: "id")
     }
-    
+}
+
+public extension RealmStore {
     func `where`(_ queryHandler: ((Query<Entity>) -> Query<Bool>)) -> RealmQuery<Entity> {
         guard let items = entities else { return RealmQuery(results: nil) }
         let results = items.where(queryHandler)
