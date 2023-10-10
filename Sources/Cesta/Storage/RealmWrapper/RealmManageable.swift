@@ -115,7 +115,7 @@ public extension RealmManageable {
         do {
             let configuration = createConfiguration()
             let realm = try Realm(configuration: configuration)
-            try realm.writeAsync({
+            realm.writeAsync({
                 writeHandler(realm)
             }, onComplete: { error in
                 if !realm.autorefresh {
@@ -124,7 +124,7 @@ public extension RealmManageable {
                 completion?(realm, error)
             })
         } catch {
-            log.error("Write to database failed, err: \(error)")
+            log.error("database init failed, error: \(error)")
             completion?(nil, error)
         }
     }
