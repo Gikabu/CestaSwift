@@ -55,6 +55,10 @@ public extension RealmProxiable {
 open class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxiable {
     public init() {}
     
+    public var actor: RealmActor {
+        RealmActor(config: rm.createConfiguration())
+    }
+    
     private var entities: Results<Entity>? {
         return query().results
     }
@@ -83,6 +87,20 @@ public extension RealmStore {
         })
     }
     
+    func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) async throws {
+        let realm = try await actor.realm
+        try await realm.asyncWrite {
+            realm.add(entity, update: update)
+        }
+    }
+    
+    func append(_ entities: [Entity], update: Realm.UpdatePolicy = .modified) async throws {
+        let realm = try await actor.realm
+        try await realm.asyncWrite {
+            realm.add(entities, update: update)
+        }
+    }
+    
     func replace(_ entity: Entity) {
         rm.transaction({ (realm) in
             realm.add(entity, update: .all)
@@ -95,6 +113,20 @@ public extension RealmStore {
         })
     }
     
+    func replace(_ entity: Entity) async throws {
+        let realm = try await actor.realm
+        try await realm.asyncWrite {
+            realm.add(entity, update: .all)
+        }
+    }
+    
+    func replace(_ entities: [Entity]) async throws {
+        let realm = try await actor.realm
+        try await realm.asyncWrite {
+            realm.add(entities, update: .all)
+        }
+    }
+    
     func delete(_ entity: Entity) {
         rm.transaction({ (realm) in
             realm.delete(entity)
@@ -105,5 +137,19 @@ public extension RealmStore {
         rm.transaction({ (realm) in
             realm.delete(entities)
         })
+    }
+    
+    func delete(_ entity: Entity) async throws {
+        let realm = try await actor.realm
+        try await realm.asyncWrite {
+            realm.delete(entity)
+        }
+    }
+    
+    func delete(_ entities: [Entity]) async throws {
+        let realm = try await actor.realm
+        try await realm.asyncWrite {
+            realm.delete(entities)
+        }
     }
 }
