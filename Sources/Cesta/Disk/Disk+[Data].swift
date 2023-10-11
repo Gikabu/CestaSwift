@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ZIPFoundation
 
 public extension Disk {
     /// Save an array of Data objects to disk
