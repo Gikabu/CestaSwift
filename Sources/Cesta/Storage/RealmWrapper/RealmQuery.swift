@@ -22,7 +22,8 @@ final public class RealmQuery<T: Object> {
     
     private var deleteNotificationBlock: RealmQueryChanged?
     private var insertNotificationBlock: RealmQueryChanged?
-    private var updateNotificationBlock: RealmQueryChanged?
+    private var replaceNotificationBlock: RealmQueryChanged?
+    private var modifyNotificationBlock: RealmQueryChanged?
 
     private(set) var notificationToken: NotificationToken?
     private(set) var section: Int?
@@ -74,11 +75,23 @@ final public class RealmQuery<T: Object> {
         return self
     }
     
-    public func onUpdate<Object: AnyObject>(
+    public func onReplace<Object: AnyObject>(
         _ object: Object,
         block: @escaping (Object, [IndexPath]) -> Void
     ) -> Self {
-        updateNotificationBlock = { [weak object] (modifications) in
+        replaceNotificationBlock = { [weak object] (modifications) in
+            guard let weakObject = object else {return}
+            
+            block(weakObject, modifications)
+        }
+        return self
+    }
+    
+    public func onModify<Object: AnyObject>(
+        _ object: Object,
+        block: @escaping (Object, [IndexPath]) -> Void
+    ) -> Self {
+        modifyNotificationBlock = { [weak object] (modifications) in
             guard let weakObject = object else {return}
             
             block(weakObject, modifications)
@@ -104,7 +117,7 @@ final public class RealmQuery<T: Object> {
                 let indexPathsForModifications = weakSelf.indexPathsFromInt(modifications)
                 
                 if !deletions.isEmpty && !insertions.isEmpty && deletions.count == insertions.count {
-                    weakSelf.updateNotificationBlock?(indexPathsForInsertions)
+                    weakSelf.replaceNotificationBlock?(indexPathsForDeletions)
                 } else {
                     if !deletions.isEmpty {
                         weakSelf.deleteNotificationBlock?(indexPathsForDeletions)
@@ -113,7 +126,7 @@ final public class RealmQuery<T: Object> {
                         weakSelf.insertNotificationBlock?(indexPathsForInsertions)
                     }
                     if !modifications.isEmpty {
-                        weakSelf.updateNotificationBlock?(indexPathsForModifications)
+                        weakSelf.modifyNotificationBlock?(indexPathsForModifications)
                     }
                 }
             default:

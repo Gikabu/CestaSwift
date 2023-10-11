@@ -83,6 +83,18 @@ public extension RealmStore {
         })
     }
     
+    func replace(_ entity: Entity) {
+        rm.transaction({ (realm) in
+            realm.add(entity, update: .all)
+        })
+    }
+    
+    func replace(_ entities: [Entity]) {
+        rm.transaction({ (realm) in
+            realm.add(entities, update: .all)
+        })
+    }
+    
     func delete(_ entity: Entity) {
         rm.transaction({ (realm) in
             realm.delete(entity)
