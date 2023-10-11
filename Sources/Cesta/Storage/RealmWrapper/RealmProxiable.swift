@@ -71,15 +71,15 @@ public extension RealmStore {
         return RealmQuery(results: results)
     }
     
-    func append(_ entity: Entity) {
+    func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) {
         rm.transaction({ (realm) in
-            realm.add(entity, update: .all)
+            realm.add(entity, update: update)
         })
     }
     
-    func append(_ entities: [Entity]) {
+    func append(_ entities: [Entity], update: Realm.UpdatePolicy = .modified) {
         rm.transaction({ (realm) in
-            realm.add(entities, update: .all)
+            realm.add(entities, update: update)
         })
     }
     

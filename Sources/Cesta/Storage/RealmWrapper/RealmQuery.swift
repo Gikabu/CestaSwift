@@ -54,10 +54,10 @@ final public class RealmQuery<T: Object> {
         _ object: Object,
         block: @escaping (Object, [IndexPath]) -> Void
     ) -> Self {
-        deleteNotificationBlock = { [weak object] (insertions) in
+        deleteNotificationBlock = { [weak object] (deletions) in
             guard let weakObject = object else {return}
             
-            block(weakObject, insertions)
+            block(weakObject, deletions)
         }
         return self
     }
@@ -103,14 +103,18 @@ final public class RealmQuery<T: Object> {
                 let indexPathsForInsertions = weakSelf.indexPathsFromInt(insertions)
                 let indexPathsForModifications = weakSelf.indexPathsFromInt(modifications)
                 
-                if !deletions.isEmpty {
-                    weakSelf.deleteNotificationBlock?(indexPathsForDeletions)
-                }
-                if !insertions.isEmpty {
-                    weakSelf.insertNotificationBlock?(indexPathsForInsertions)
-                }
-                if !modifications.isEmpty {
-                    weakSelf.updateNotificationBlock?(indexPathsForModifications)
+                if !deletions.isEmpty && !insertions.isEmpty && deletions.count == insertions.count {
+                    weakSelf.updateNotificationBlock?(indexPathsForInsertions)
+                } else {
+                    if !deletions.isEmpty {
+                        weakSelf.deleteNotificationBlock?(indexPathsForDeletions)
+                    }
+                    if !insertions.isEmpty {
+                        weakSelf.insertNotificationBlock?(indexPathsForInsertions)
+                    }
+                    if !modifications.isEmpty {
+                        weakSelf.updateNotificationBlock?(indexPathsForModifications)
+                    }
                 }
             default:
                 break
