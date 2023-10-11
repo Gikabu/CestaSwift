@@ -14,13 +14,15 @@ let package = Package(
     dependencies: [
         .package(name:"Realm", url: "https://github.com/realm/realm-swift", .upToNextMajor(from: "10.43.0")),
         .package(url: "https://github.com/SwiftyBeaver/SwiftyBeaver.git", .upToNextMajor(from: "2.0.0")),
+        .package(url: "https://github.com/weichsel/ZIPFoundation.git", .upToNextMajor(from: "0.9.17")),
     ],
     targets: [
         .target(
             name: "Cesta",
             dependencies: [
                 .product(name: "RealmSwift", package: "Realm"),
-                "SwiftyBeaver"
+                "SwiftyBeaver",
+                "ZIPFoundation"
             ]
         ),
         .testTarget(name: "CestaTests", dependencies: ["Cesta"]),
