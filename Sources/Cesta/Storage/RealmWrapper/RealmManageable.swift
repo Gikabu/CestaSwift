@@ -44,6 +44,10 @@ public extension RealmManageable {
         return false
     }
     
+    var isUseInMemory: Bool {
+        return false
+    }
+    
     var readOnly: Bool {
         return false
     }

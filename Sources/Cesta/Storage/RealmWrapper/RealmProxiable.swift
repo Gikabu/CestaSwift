@@ -64,7 +64,7 @@ open class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxi
     }
     
     open var findAll: RealmQuery<Entity> {
-        return query(sortProperty: "id")
+        return query()
     }
 }
 
