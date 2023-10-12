@@ -29,7 +29,7 @@ public protocol RealmManageable {
     var shouldCompactOnLaunch: ((Int, Int) -> Bool)? { get }
     var migrationBlock: MigrationBlock? { get }
     var syncConfiguration: SyncConfiguration? { get }
-    var objectTypes: [Object.Type]? { get }
+    var objectTypes: [ObjectBase.Type]? { get }
     
     // MARK: - Constructor
     
