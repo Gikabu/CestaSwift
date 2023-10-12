@@ -68,7 +68,7 @@ public extension RealmManageable {
         return nil
     }
     
-    var objectTypes: [Object.Type]? {
+    var objectTypes: [ObjectBase.Type]? {
         return nil
     }
     
