@@ -7,11 +7,11 @@
 
 import UIKit
 
-class Cesta {
+public class Cesta {
     private init() {}
 }
 
-extension Cesta {
+public extension Cesta {
     static var osVersion: String {
         let device = UIDevice.current
         return "\(device.systemName)-\(device.systemVersion)"
