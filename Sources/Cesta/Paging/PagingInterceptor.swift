@@ -12,7 +12,7 @@ public enum PagingInterceptResult<Number: Numeric, Value> {
          complete(Page<Number, Value>)
 }
 
-public class PagingInterceptor<Number: Numeric, Value> {
+open class PagingInterceptor<Number: Numeric, Value> {
     public init() { }
     
     public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
