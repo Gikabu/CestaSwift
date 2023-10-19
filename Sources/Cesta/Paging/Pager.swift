@@ -72,22 +72,30 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
                 }
                 return InterceptedRequest(result: .proceed(mutableRequest, handleAfterwards: false),
                                           interceptorsToHandleAfterwards: interceptorsToHandleAfterwards)
-            }.flatMap { intercepted -> PagingResultPublisher<Number, Value> in
+            }
+            .flatMap { intercepted -> PagingResultPublisher<Number, Value> in
                 switch intercepted.result {
                 case .proceed(let request, handleAfterwards: _):
-                    return source.fetch(request: request)
-                        .retry(times: request.params.retryPolicy?.maxRetries ?? 0,
-                               if: request.params.retryPolicy?.shouldRetry ?? { _ in false })
-                        .handleEvents(receiveOutput: { result in
-                            for interceptor in intercepted.interceptorsToHandleAfterwards {
-                                interceptor.handle(result: result)
-                            }
-                        }).eraseToAnyPublisher()
+                    return PagingResultFuture<Number, Value> { promise in
+                        Task {
+                            await source.fetch(request: request)
+                                .retry(times: request.params.retryPolicy?.maxRetries ?? 0,
+                                       if: request.params.retryPolicy?.shouldRetry ?? { _ in false })
+                                .handleEvents(receiveOutput: { result in
+                                    for interceptor in intercepted.interceptorsToHandleAfterwards {
+                                        interceptor.handle(result: result)
+                                    }
+                                    promise(.success(result))
+                                })
+                        }
+                    }
+                    .eraseToAnyPublisher()
                 case .complete(let result):
                     return Just(result)
                         .setFailureType(to: Error.self)
                         .eraseToAnyPublisher()
                 }
+               
             }.sink { [self] completion in
                 if case .failure(_) = completion {
                     subject.send(completion: completion)
