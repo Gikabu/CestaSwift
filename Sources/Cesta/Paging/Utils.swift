@@ -35,3 +35,18 @@ public extension Publisher {
         Publishers.RetryIf(publisher: self, times: times, condition: condition)
     }
 }
+
+public extension Future where Failure == Error {
+    convenience init(_ async: @escaping () async throws -> Output) {
+        self.init { promise in
+            Task {
+                do {
+                    let result = try await async()
+                    promise(.success(result))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        }
+    }
+}

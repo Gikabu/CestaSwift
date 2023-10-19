@@ -18,5 +18,5 @@ public protocol RemoteSource: AnyObject {
     associatedtype Value
     var refreshKey: Number { get }
     func pagingKey(for number: Number) -> PagingKey<Number>
-    func fetch(request: PagingRequest<Number>) async -> PagingResultPublisher<Number, Value>
+    func fetch(request: PagingRequest<Number>) -> PagingResultFuture<Number, Value>
 }
