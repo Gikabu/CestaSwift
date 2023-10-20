@@ -7,9 +7,7 @@
 
 import Foundation
 
-public protocol HashableNumeric: Numeric, Hashable {}
-
-public struct PagingKey<Number: Numeric>: Equatable {
+public struct PagingKey<Number: BinaryInteger>: Equatable {
     public let page: Number
     public let prevPage: Number?
     public let nextPage: Number?

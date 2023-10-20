@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-public enum PagingState<Number: Numeric, Value> {
+public enum PagingState<Number: BinaryInteger, Value> {
     case refreshing,
          prepending,
          appending,
@@ -21,8 +21,7 @@ private let deduplicationInterval: TimeInterval = 0.25
  Pager is the glue that binds all PagingSource, RequestPublisher components together, mapping requests from the publisher, passing through interceptor and finally to the paging source.
  It publishes PagingStates that allow your app to respond to paging events and update the UI. Working with a Pager directly offers the most flexibility and customizations.
  */
-public class Pager<Number, Value, Source: RemoteSource> where Source.Number == Number, Source.Value == Value {
-    public typealias Interceptor = PagingInterceptor<Number, Value>
+public class Pager<Number, Value, Source: RemoteSource, Interceptor: PagingInterceptor> where Source.Number == Number, Source.Value == Value, Interceptor.Number == Number, Interceptor.Value == Value {
     public typealias Result = PagingState<Number, Value>
     
     public let source: Source

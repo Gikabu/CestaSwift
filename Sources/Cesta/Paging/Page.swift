@@ -10,7 +10,7 @@ import Foundation
 /**
  Represents a response to a single **PagingRequest** and contains an array of Values.
  */
-public class Page<Number: Numeric, Value> {
+public class Page<Number: BinaryInteger, Value> {
     public let request: PagingRequest<Number>
     public let values: [Value]
     

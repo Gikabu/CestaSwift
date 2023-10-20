@@ -8,7 +8,7 @@
 import Combine
 import Foundation
 
-public enum PagingRequest<Number: Numeric> {
+public enum PagingRequest<Number: BinaryInteger> {
     case refresh(PagingRequestParams<Number>),
          prepend(PagingRequestParams<Number>),
          append(PagingRequestParams<Number>)
@@ -48,7 +48,7 @@ extension PagingRequest {
 
 public typealias PagingRequestParamsUserInfo = [AnyHashable: Any?]?
 
-public struct PagingRequestParams<Number: Numeric> {
+public struct PagingRequestParams<Number: BinaryInteger> {
     public let key: PagingKey<Number>
     public let pageSize: Int
     public let retryPolicy: RetryPolicy?
@@ -90,7 +90,7 @@ public struct RetryPolicy {
     }
 }
 
-public class PagingRequestSource<Number: Numeric> {
+public class PagingRequestSource<Number: BinaryInteger> {
     public typealias Request = PagingRequest<Number>
     
     private let subject = PassthroughSubject<Request, Never>()

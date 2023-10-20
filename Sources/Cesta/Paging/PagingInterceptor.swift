@@ -7,24 +7,21 @@
 
 import Foundation
 
-public enum PagingInterceptResult<Number: Numeric, Value> {
+public enum PagingInterceptResult<Number: BinaryInteger, Value> {
     case proceed(PagingRequest<Number>, handleAfterwards: Bool),
          complete(Page<Number, Value>)
 }
 
-open class PagingInterceptor<Number: Numeric, Value> {
-    public init() { }
-    
-    open func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
-        fatalError()
-    }
-    
-    open func handle(result page: Page<Number, Value>) { }
+public protocol PagingInterceptor: AnyObject {
+    associatedtype Number: BinaryInteger
+    associatedtype Value
+    func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value>
+    func handle(result page: Page<Number, Value>)
 }
 
 public let cacheInterceptorDefaultExpirationInterval = TimeInterval(10 * 60) // 10 min
 
-public class CacheInterceptor<Number: HashableNumeric, Value>: PagingInterceptor<Number, Value> {
+public class CacheInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
     private let expirationInterval: TimeInterval
     private var cache = [Number: CacheEntry]()
     
@@ -32,7 +29,7 @@ public class CacheInterceptor<Number: HashableNumeric, Value>: PagingInterceptor
         self.expirationInterval = expirationInterval
     }
     
-    public override func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
+    public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
         pruneCache() // remove expired items
         if let cached = cache[request.page] {
             return .complete(cached.page) // complete the request with the cached page
@@ -41,7 +38,7 @@ public class CacheInterceptor<Number: HashableNumeric, Value>: PagingInterceptor
         }
     }
     
-    public override func handle(result page: Page<Number, Value>) {
+    public func handle(result page: Page<Number, Value>) {
         cache[page.number] = CacheEntry(page: page) // store result in cache
     }
     
@@ -59,19 +56,19 @@ public class CacheInterceptor<Number: HashableNumeric, Value>: PagingInterceptor
     }
 }
 
-public class LoggingInterceptor<Number: Numeric, Value>: PagingInterceptor<Number, Value> {
+public class LoggingInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
     private let log: (String) -> Void // allows for custom logging
     
     public init(log: ((String) -> Void)? = nil) {
         self.log = log ?? { print($0) }
     }
     
-    public override func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
+    public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
         log("Sending pagination request: \(request)") // log the request
         return .proceed(request, handleAfterwards: true) // proceed with the request, without changing it
     }
     
-    public override func handle(result page: Page<Number, Value>) {
+    public func handle(result page: Page<Number, Value>) {
         log("Received page: \(page)") // once the page is retuned, print it
     }
 }
