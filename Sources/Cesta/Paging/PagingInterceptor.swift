@@ -15,11 +15,11 @@ public enum PagingInterceptResult<Number: Numeric, Value> {
 open class PagingInterceptor<Number: Numeric, Value> {
     public init() { }
     
-    public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
+    open func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
         fatalError()
     }
     
-    public func handle(result page: Page<Number, Value>) { }
+    open func handle(result page: Page<Number, Value>) { }
 }
 
 public let cacheInterceptorDefaultExpirationInterval = TimeInterval(10 * 60) // 10 min
