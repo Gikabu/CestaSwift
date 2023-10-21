@@ -72,13 +72,12 @@ public class LoggingInterceptor<Number: BinaryInteger, Value>: PagingInterceptor
     }
     
     public override func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
-        let value = JSON(request)
-        logger("pagination request sent: \(value.description)")
+        logger("pagination request sent: \(request.toJSON().description)")
         return .proceed(request, handleAfterwards: true)
     }
     
     public override func handle(result page: Page<Number, Value>) {
-        let value = JSON(page)
-        logger("page received: \(value.description)")
+        let request = page.request.toJSON()
+        logger("page received -> page: \(page.number), count: \(page.values.count), request: \(request.description)")
     }
 }

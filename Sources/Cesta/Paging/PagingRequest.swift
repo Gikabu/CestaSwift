@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import SwiftyJSON
 
 public enum PagingRequest<Number: BinaryInteger> {
     case refresh(PagingRequestParams<Number>),
@@ -29,6 +30,17 @@ public extension PagingRequest {
     var page: Number {
         params.key.page
     }
+    
+    var typeName: String {
+        switch self {
+        case .refresh(_):
+            return "refresh"
+        case .prepend(_):
+            return "prepend"
+        case .append(_):
+            return "append"
+        }
+    }
 }
 
 extension PagingRequest {
@@ -43,6 +55,23 @@ extension PagingRequest {
         default:
             return false
         }
+    }
+}
+
+extension PagingRequest {
+    func toJSON() -> JSON {
+        return JSON(toDictionary())
+    }
+    
+    func toDictionary() -> [String:Any] {
+        var dictionary = [String:Any]()
+        dictionary["type"] = typeName
+        dictionary["page"] = page
+        dictionary["pageSize"] = params.pageSize
+        dictionary["retryPolicy"] = params.retryPolicy
+        dictionary["userInfo"] = params.userInfo
+        dictionary["timestamp"] = params.timestamp
+        return dictionary
     }
 }
 
