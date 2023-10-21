@@ -19,9 +19,19 @@ public protocol PagingInterceptor: AnyObject {
     func handle(result page: Page<Number, Value>)
 }
 
+extension PagingInterceptor {
+    public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
+        fatalError()
+    }
+    
+    public func handle(result page: Page<Number, Value>) {}
+}
+
+open class AnyInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {}
+
 public let cacheInterceptorDefaultExpirationInterval = TimeInterval(10 * 60) // 10 min
 
-public class CacheInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
+public class CacheInterceptor<Number: BinaryInteger, Value>: AnyInterceptor<Number, Value> {
     private let expirationInterval: TimeInterval
     private var cache = [Number: CacheEntry]()
     
@@ -56,7 +66,7 @@ public class CacheInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
     }
 }
 
-public class LoggingInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
+public class LoggingInterceptor<Number: BinaryInteger, Value>: AnyInterceptor<Number, Value> {
     private let log: (String) -> Void // allows for custom logging
     
     public init(log: ((String) -> Void)? = nil) {
