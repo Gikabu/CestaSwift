@@ -81,7 +81,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
     public init(
         source: Source,
         pageSize: Int,
-        interceptors: [AnyInterceptor<Number, Value>]
+        interceptors: [PagingInterceptor<Number, Value>]
     ) {
         pager = Pager(
             source: source,

@@ -25,7 +25,7 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
     public typealias Result = PagingState<Number, Value>
     
     public let source: Source
-    public let interceptors: [AnyInterceptor<Number, Value>]
+    public let interceptors: [PagingInterceptor<Number, Value>]
     
     private var subs = Set<AnyCancellable>()
     
@@ -36,7 +36,7 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
     
     public init(source: Source,
                 requestSource: PagingRequestSource<Number>,
-                interceptors: [AnyInterceptor<Number, Value>] = []) {
+                interceptors: [PagingInterceptor<Number, Value>] = []) {
         self.source = source
         self.interceptors = interceptors
         requestSource.publisher
@@ -55,7 +55,7 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
                 subject.send(state)
             }).tryMap { request -> InterceptedRequest in
                 var mutableRequest = request
-                var interceptorsToHandleAfterwards = [AnyInterceptor<Number, Value>]()
+                var interceptorsToHandleAfterwards = [PagingInterceptor<Number, Value>]()
                 for interceptor in interceptors {
                     let result = try interceptor.intercept(request: mutableRequest)
                     switch result {
@@ -101,6 +101,6 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
     
     private struct InterceptedRequest {
         let result: PagingInterceptResult<Number, Value>
-        let interceptorsToHandleAfterwards: [AnyInterceptor<Number, Value>]
+        let interceptorsToHandleAfterwards: [PagingInterceptor<Number, Value>]
     }
 }

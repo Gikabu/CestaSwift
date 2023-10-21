@@ -12,28 +12,21 @@ public enum PagingInterceptResult<Number: BinaryInteger, Value> {
          complete(Page<Number, Value>)
 }
 
-public protocol PagingInterceptor: AnyObject {
-    associatedtype Number: BinaryInteger
-    associatedtype Value
-    func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value>
-    func handle(result page: Page<Number, Value>)
-}
-
-open class AnyInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
+open class PagingInterceptor<Number: BinaryInteger, Value> {
     public init() {}
     
-    public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
+    open func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
         fatalError()
     }
     
-    public func handle(result page: Page<Number, Value>) {
+    open func handle(result page: Page<Number, Value>) {
         
     }
 }
 
 public let cacheInterceptorDefaultExpirationInterval = TimeInterval(10 * 60) // 10 min
 
-public class CacheInterceptor<Number: BinaryInteger, Value>: AnyInterceptor<Number, Value> {
+public class CacheInterceptor<Number: BinaryInteger, Value>: PagingInterceptor<Number, Value> {
     private let expirationInterval: TimeInterval
     private var cache = [Number: CacheEntry]()
     
@@ -68,7 +61,7 @@ public class CacheInterceptor<Number: BinaryInteger, Value>: AnyInterceptor<Numb
     }
 }
 
-public class LoggingInterceptor<Number: BinaryInteger, Value>: AnyInterceptor<Number, Value> {
+public class LoggingInterceptor<Number: BinaryInteger, Value>: PagingInterceptor<Number, Value> {
     private let log: (String) -> Void // allows for custom logging
     
     public init(log: ((String) -> Void)? = nil) {
