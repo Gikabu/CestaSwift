@@ -52,11 +52,11 @@ public struct DefaultMediatorOutput<Value>: MediatorOutput {
     }
 }
 
-open class PaginationMediator<Number: BinaryInteger, Value, Source: RemoteSource, Output: MediatorOutput, Interceptor: PagingInterceptor>
-where Source.Number == Number, Source.Value == Value, Output.Value == Value, Interceptor.Number == Number, Interceptor.Value == Value {
+open class PaginationMediator<Number: BinaryInteger, Value, Source: RemoteSource, Output: MediatorOutput>
+where Source.Number == Number, Source.Value == Value, Output.Value == Value {
     private let pageSize: Int
     private let requestSource = PagingRequestSource<Number>()
-    private let pager: Pager<Number, Value, Source, Interceptor>
+    private let pager: Pager<Number, Value, Source>
     
     private var lastPrependPage: Page<Number, Value>?
     private var lastAppendPage: Page<Number, Value>?
@@ -81,7 +81,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value, Int
     public init(
         source: Source,
         pageSize: Int,
-        interceptors: [Interceptor]
+        interceptors: [AnyInterceptor<Number, Value>]
     ) {
         pager = Pager(
             source: source,

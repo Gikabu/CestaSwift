@@ -21,11 +21,11 @@ private let deduplicationInterval: TimeInterval = 0.25
  Pager is the glue that binds all PagingSource, RequestPublisher components together, mapping requests from the publisher, passing through interceptor and finally to the paging source.
  It publishes PagingStates that allow your app to respond to paging events and update the UI. Working with a Pager directly offers the most flexibility and customizations.
  */
-public class Pager<Number, Value, Source: RemoteSource, Interceptor: PagingInterceptor> where Source.Number == Number, Source.Value == Value, Interceptor.Number == Number, Interceptor.Value == Value {
+public class Pager<Number, Value, Source: RemoteSource> where Source.Number == Number, Source.Value == Value {
     public typealias Result = PagingState<Number, Value>
     
     public let source: Source
-    public let interceptors: [Interceptor]
+    public let interceptors: [AnyInterceptor<Number, Value>]
     
     private var subs = Set<AnyCancellable>()
     
@@ -36,7 +36,7 @@ public class Pager<Number, Value, Source: RemoteSource, Interceptor: PagingInter
     
     public init(source: Source,
                 requestSource: PagingRequestSource<Number>,
-                interceptors: [Interceptor] = []) {
+                interceptors: [AnyInterceptor<Number, Value>] = []) {
         self.source = source
         self.interceptors = interceptors
         requestSource.publisher
@@ -55,7 +55,7 @@ public class Pager<Number, Value, Source: RemoteSource, Interceptor: PagingInter
                 subject.send(state)
             }).tryMap { request -> InterceptedRequest in
                 var mutableRequest = request
-                var interceptorsToHandleAfterwards = [Interceptor]()
+                var interceptorsToHandleAfterwards = [AnyInterceptor<Number, Value>]()
                 for interceptor in interceptors {
                     let result = try interceptor.intercept(request: mutableRequest)
                     switch result {
@@ -101,6 +101,6 @@ public class Pager<Number, Value, Source: RemoteSource, Interceptor: PagingInter
     
     private struct InterceptedRequest {
         let result: PagingInterceptResult<Number, Value>
-        let interceptorsToHandleAfterwards: [Interceptor]
+        let interceptorsToHandleAfterwards: [AnyInterceptor<Number, Value>]
     }
 }
