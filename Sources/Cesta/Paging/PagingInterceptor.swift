@@ -9,7 +9,7 @@ import Foundation
 import SwiftyJSON
 
 public enum PagingInterceptResult<Number: BinaryInteger, Value> {
-    case proceed(PagingRequest<Number>, handleAfterwards: Bool, _ placeholder: Page<Number, Value>? = nil)
+    case proceed(PagingRequest<Number>, handleAfterwards: Bool, _ placeholder: Page<Number, Value>?)
     case complete(Page<Number, Value>)
 }
 
@@ -40,7 +40,7 @@ public class CacheInterceptor<Number: BinaryInteger, Value>: PagingInterceptor<N
         if let cached = cache[request.page] {
             return .complete(cached.page) // complete the request with the cached page
         } else {
-            return .proceed(request, handleAfterwards: true) // don't have data, proceed...
+            return .proceed(request, handleAfterwards: true, nil) // don't have data, proceed...
         }
     }
     
@@ -67,17 +67,17 @@ public class LoggingInterceptor<Number: BinaryInteger, Value>: PagingInterceptor
     
     public init(logger: ((String) -> Void)? = nil) {
         self.logger = logger ?? {
-            log.debug($0)
+            print($0)
         }
     }
     
     public override func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
         logger("pagination request sent: \(request.toJSON().description)")
-        return .proceed(request, handleAfterwards: true)
+        return .proceed(request, handleAfterwards: true, nil)
     }
     
     public override func handle(result page: Page<Number, Value>) {
         let request = page.request.toJSON()
-        logger("page received -> page: \(page.number), count: \(page.values.count), request: \(request.description)")
+        logger("page received -> page: \(page.toJSON().description)")
     }
 }

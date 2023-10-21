@@ -56,20 +56,22 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
             }).tryMap { request -> InterceptedRequest in
                 var mutableRequest = request
                 var interceptorsToHandleAfterwards = [PagingInterceptor<Number, Value>]()
+                var placeholderResult: Page<Number, Value>? = .none
                 for interceptor in interceptors {
                     let result = try interceptor.intercept(request: mutableRequest)
                     switch result {
-                    case .proceed(let newRequest, handleAfterwards: let handleAfterwards, _):
+                    case .proceed(let newRequest, handleAfterwards: let handleAfterwards, let placeholder):
                         mutableRequest = newRequest
                         if handleAfterwards {
                             interceptorsToHandleAfterwards.append(interceptor)
                         }
+                        placeholderResult = placeholder
                     case .complete(_):
                         return InterceptedRequest(result: result,
                                                   interceptorsToHandleAfterwards: interceptorsToHandleAfterwards)
                     }
                 }
-                return InterceptedRequest(result: .proceed(mutableRequest, handleAfterwards: false),
+                return InterceptedRequest(result: .proceed(mutableRequest, handleAfterwards: false, placeholderResult),
                                           interceptorsToHandleAfterwards: interceptorsToHandleAfterwards)
             }
             .flatMap { [self] intercepted -> PagingResultPublisher<Number, Value> in

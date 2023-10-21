@@ -64,13 +64,20 @@ extension PagingRequest {
     }
     
     func toDictionary() -> [String:Any] {
+        var info: [String:Any] = [String:Any]()
+        if let userInfo = params.userInfo {
+            for item in userInfo {
+                info["\(item.key)"] = item.value
+            }
+        }
+        
         var dictionary = [String:Any]()
         dictionary["type"] = typeName
         dictionary["page"] = page
         dictionary["pageSize"] = params.pageSize
-//        dictionary["retryPolicy"] = params.retryPolicy
-//        dictionary["userInfo"] = params.userInfo
-        dictionary["timestamp"] = params.timestamp
+        dictionary["maxRetries"] = params.retryPolicy?.maxRetries
+        dictionary["info"] = JSON(info)
+        dictionary["timestamp"] = Int64(params.timestamp * 1000)
         return dictionary
     }
 }

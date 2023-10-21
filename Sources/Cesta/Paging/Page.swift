@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftyJSON
 
 /**
  Represents a response to a single **PagingRequest** and contains an array of Values.
@@ -34,5 +35,19 @@ public extension Page {
      */
     var isComplete: Bool {
         values.count == request.params.pageSize
+    }
+}
+
+extension Page {
+    func toJSON() -> JSON {
+        return JSON(toDictionary())
+    }
+    
+    func toDictionary() -> [String:Any] {
+        var dictionary = [String:Any]()
+        dictionary["number"] = number
+        dictionary["count"] = values.count
+        dictionary["request"] = request.toJSON()
+        return dictionary
     }
 }
