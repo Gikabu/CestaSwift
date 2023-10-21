@@ -19,16 +19,16 @@ public protocol PagingInterceptor: AnyObject {
     func handle(result page: Page<Number, Value>)
 }
 
-extension PagingInterceptor {
+open class AnyInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
+    public init() {}
+    
     public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
         fatalError()
     }
     
-    public func handle(result page: Page<Number, Value>) {}
-}
-
-open class AnyInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
-    public init() {}
+    public func handle(result page: Page<Number, Value>) {
+        
+    }
 }
 
 public let cacheInterceptorDefaultExpirationInterval = TimeInterval(10 * 60) // 10 min
@@ -41,7 +41,7 @@ public class CacheInterceptor<Number: BinaryInteger, Value>: AnyInterceptor<Numb
         self.expirationInterval = expirationInterval
     }
     
-    public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
+    public override func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
         pruneCache() // remove expired items
         if let cached = cache[request.page] {
             return .complete(cached.page) // complete the request with the cached page
@@ -50,7 +50,7 @@ public class CacheInterceptor<Number: BinaryInteger, Value>: AnyInterceptor<Numb
         }
     }
     
-    public func handle(result page: Page<Number, Value>) {
+    public override func handle(result page: Page<Number, Value>) {
         cache[page.number] = CacheEntry(page: page) // store result in cache
     }
     
@@ -75,12 +75,12 @@ public class LoggingInterceptor<Number: BinaryInteger, Value>: AnyInterceptor<Nu
         self.log = log ?? { print($0) }
     }
     
-    public func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
+    public override func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
         log("Sending pagination request: \(request)") // log the request
         return .proceed(request, handleAfterwards: true) // proceed with the request, without changing it
     }
     
-    public func handle(result page: Page<Number, Value>) {
+    public override func handle(result page: Page<Number, Value>) {
         log("Received page: \(page)") // once the page is retuned, print it
     }
 }
