@@ -27,7 +27,9 @@ extension PagingInterceptor {
     public func handle(result page: Page<Number, Value>) {}
 }
 
-open class AnyInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {}
+open class AnyInterceptor<Number: BinaryInteger, Value>: PagingInterceptor {
+    public init() {}
+}
 
 public let cacheInterceptorDefaultExpirationInterval = TimeInterval(10 * 60) // 10 min
 
