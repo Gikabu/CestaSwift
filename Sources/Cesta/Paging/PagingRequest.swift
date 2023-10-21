@@ -68,8 +68,8 @@ extension PagingRequest {
         dictionary["type"] = typeName
         dictionary["page"] = page
         dictionary["pageSize"] = params.pageSize
-        dictionary["retryPolicy"] = params.retryPolicy
-        dictionary["userInfo"] = params.userInfo
+//        dictionary["retryPolicy"] = params.retryPolicy
+//        dictionary["userInfo"] = params.userInfo
         dictionary["timestamp"] = params.timestamp
         return dictionary
     }
