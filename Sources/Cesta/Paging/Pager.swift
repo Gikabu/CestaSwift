@@ -59,7 +59,7 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
                 for interceptor in interceptors {
                     let result = try interceptor.intercept(request: mutableRequest)
                     switch result {
-                    case .proceed(let newRequest, handleAfterwards: let handleAfterwards):
+                    case .proceed(let newRequest, handleAfterwards: let handleAfterwards, _):
                         mutableRequest = newRequest
                         if handleAfterwards {
                             interceptorsToHandleAfterwards.append(interceptor)
@@ -72,9 +72,12 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
                 return InterceptedRequest(result: .proceed(mutableRequest, handleAfterwards: false),
                                           interceptorsToHandleAfterwards: interceptorsToHandleAfterwards)
             }
-            .flatMap { intercepted -> PagingResultPublisher<Number, Value> in
+            .flatMap { [self] intercepted -> PagingResultPublisher<Number, Value> in
                 switch intercepted.result {
-                case .proceed(let request, handleAfterwards: _):
+                case .proceed(let request, handleAfterwards: _, let placeholderResult):
+                    if case .refresh(_) = request, let page = placeholderResult {
+                        subject.send(.done(page))
+                    }
                     return source.fetch(request: request)
                         .retry(times: request.params.retryPolicy?.maxRetries ?? 0,
                                if: request.params.retryPolicy?.shouldRetry ?? { _ in false })

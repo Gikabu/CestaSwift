@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import SwiftyJSON
 
 public enum PagingInterceptResult<Number: BinaryInteger, Value> {
-    case proceed(PagingRequest<Number>, handleAfterwards: Bool),
-         complete(Page<Number, Value>)
+    case proceed(PagingRequest<Number>, handleAfterwards: Bool, _ placeholder: Page<Number, Value>? = nil)
+    case complete(Page<Number, Value>)
 }
 
 open class PagingInterceptor<Number: BinaryInteger, Value> {
@@ -62,18 +63,22 @@ public class CacheInterceptor<Number: BinaryInteger, Value>: PagingInterceptor<N
 }
 
 public class LoggingInterceptor<Number: BinaryInteger, Value>: PagingInterceptor<Number, Value> {
-    private let log: (String) -> Void // allows for custom logging
+    private let logger: (String) -> Void // allows for custom logging
     
-    public init(log: ((String) -> Void)? = nil) {
-        self.log = log ?? { print($0) }
+    public init(logger: ((String) -> Void)? = nil) {
+        self.logger = logger ?? {
+            log.debug($0)
+        }
     }
     
     public override func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
-        log("Sending pagination request: \(request)") // log the request
-        return .proceed(request, handleAfterwards: true) // proceed with the request, without changing it
+        let value = JSON(request)
+        logger("pagination request sent: \(value.description)")
+        return .proceed(request, handleAfterwards: true)
     }
     
     public override func handle(result page: Page<Number, Value>) {
-        log("Received page: \(page)") // once the page is retuned, print it
+        let value = JSON(page)
+        logger("page received: \(value.description)")
     }
 }
