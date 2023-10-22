@@ -65,7 +65,9 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
                         if handleAfterwards {
                             interceptorsToHandleAfterwards.append(interceptor)
                         }
-                        placeholderResult = placeholder
+                        if let page = placeholder {
+                            placeholderResult = page
+                        }
                     case .complete(_):
                         return InterceptedRequest(result: result,
                                                   interceptorsToHandleAfterwards: interceptorsToHandleAfterwards)
