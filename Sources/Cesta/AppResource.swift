@@ -1,5 +1,5 @@
 //
-//  Cesta.swift
+//  AppResource.swift
 //
 //
 //  Created by Jonathan Gikabu on 10/10/2023.
@@ -7,11 +7,11 @@
 
 import UIKit
 
-public class Cesta {
+public class AppResource {
     private init() {}
 }
 
-public extension Cesta {
+public extension AppResource {
     static var osVersion: String {
         let device = UIDevice.current
         return "\(device.systemName)-\(device.systemVersion)"
@@ -32,4 +32,12 @@ public extension Cesta {
     static var bundleVersion: String {
         return Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
     }
+    
+    static let AVATAR_ALBUM = "Album/avatar/"
+    static let IMAGE_ALBUM = "Album/image/"
+    static let VIDEO_ALBUM = "Album/video/"
+    static let AUDIO_DIR = "General/audio/"
+    static let DOCUMENTS_DIR = "General/files/"
+    static let THUMBNAIL_DIR = "General/thumb/"
+    static let APP_GROUP_DIR = "AppGroup/shared/"
 }
