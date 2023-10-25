@@ -139,6 +139,14 @@ public extension RealmStore {
         })
     }
     
+    func deleteAll() {
+        if let items: [Entity] = entities?.map({$0}), !items.isEmpty {
+            rm.transaction({ (realm) in
+                realm.delete(items)
+            })
+        }
+    }
+    
     func delete(_ entity: Entity) async throws {
         let realm = try await actor.realm
         try await realm.asyncWrite {
@@ -150,6 +158,15 @@ public extension RealmStore {
         let realm = try await actor.realm
         try await realm.asyncWrite {
             realm.delete(entities)
+        }
+    }
+    
+    func deleteAll() async throws {
+        if let items: [Entity] = entities?.map({$0}), !items.isEmpty {
+            let realm = try await actor.realm
+            try await realm.asyncWrite {
+                realm.delete(items)
+            }
         }
     }
 }

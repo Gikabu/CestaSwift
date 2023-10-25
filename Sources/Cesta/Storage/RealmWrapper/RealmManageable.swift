@@ -76,6 +76,11 @@ public extension RealmManageable {
         return nil
     }
     
+    static var defaultQueue: DispatchQueue {
+        let label = "com.cesta.RealmWrapper.RealmManageable.defaultQueue"
+        return DispatchQueue(label: label)
+    }
+    
     // MARK: - Public methods
     
     func createConfiguration() -> Realm.Configuration {
@@ -130,6 +135,57 @@ public extension RealmManageable {
         } catch {
             log.error("database init failed, error: \(error)")
             completion?(nil, error)
+        }
+    }
+    
+    func performSync(
+        _ writeHandler: @escaping RealmWriteHandler,
+        writeQueue: DispatchQueue = Self.defaultQueue,
+        completionQueue: DispatchQueue = DispatchQueue.main,
+        completion: RealmCompletionHandler? = nil
+    ) {
+        writeQueue.sync {
+            perform(writeHandler: writeHandler, completionQueue: completionQueue, completion: completion)
+        }
+    }
+    
+    // MARK: - Private methods
+    
+    private func perform(
+        writeHandler: @escaping RealmWriteHandler,
+        completionQueue: DispatchQueue,
+        completion: RealmCompletionHandler?
+    ) {
+        do {
+            let configuration = createConfiguration()
+            let realm = try Realm(configuration: configuration)
+            try realm.safeWrite {
+                writeHandler(realm)
+            }
+
+            Realm.asyncOpen(configuration: configuration, callbackQueue: completionQueue) { result in
+                switch result {
+                    case .success(let mRealm):
+                        mRealm.refresh()
+                        completion?(mRealm, nil)
+                    case .failure(let error):
+                        completion?(nil, error)
+                        print(error.localizedDescription)
+                    }
+            }
+        } catch {
+            print("write to database error: \(error)")
+            completion?(nil, error)
+        }
+    }
+}
+
+extension Realm {
+    public func safeWrite(_ block: (() throws -> Void)) throws {
+        if isInWriteTransaction {
+            try block()
+        } else {
+            try write(block)
         }
     }
 }
