@@ -55,10 +55,8 @@ public extension RealmProxiable {
 open class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxiable {
     public init() {}
     
-    public var actorRealm: Realm {
-        get async throws {
-            try await Realm(configuration: rm.createConfiguration(), actor: RealmActor.shared)
-        }
+    public var actor: RealmActor {
+        RealmActor(config: rm.createConfiguration())
     }
     
     private var entities: Results<Entity>? {
@@ -89,17 +87,29 @@ public extension RealmStore {
         })
     }
     
-    @RealmActor
     func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) async throws {
-        let realm = try await Realm(configuration: rm.createConfiguration(), actor: RealmActor.shared)
-        try await realm.asyncWrite {
-            realm.add(entity, update: update)
+        return try await withCheckedThrowingContinuation { continuation in
+            rm.performSync({ (realm) in
+                realm.add(entity, update: update)
+            }) { _, err in
+                if let error = err {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
+                }
+            }
         }
     }
     
-    @RealmActor
+//    func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) async throws {
+//        let realm = try await actor.realm
+//        try await realm.asyncWrite {
+//            realm.add(entity, update: update)
+//        }
+//    }
+    
     func append(_ entities: [Entity], update: Realm.UpdatePolicy = .modified) async throws {
-        let realm = try await Realm(configuration: rm.createConfiguration(), actor: RealmActor.shared)
+        let realm = try await actor.realm
         try await realm.asyncWrite {
             realm.add(entities, update: update)
         }
@@ -117,17 +127,15 @@ public extension RealmStore {
         })
     }
     
-    @RealmActor
     func replace(_ entity: Entity) async throws {
-        let realm = try await actorRealm
+        let realm = try await actor.realm
         try await realm.asyncWrite {
             realm.add(entity, update: .all)
         }
     }
     
-    @RealmActor
     func replace(_ entities: [Entity]) async throws {
-        let realm = try await actorRealm
+        let realm = try await actor.realm
         try await realm.asyncWrite {
             realm.add(entities, update: .all)
         }
@@ -153,26 +161,23 @@ public extension RealmStore {
         }
     }
     
-    @RealmActor
     func delete(_ entity: Entity) async throws {
-        let realm = try await actorRealm
+        let realm = try await actor.realm
         try await realm.asyncWrite {
             realm.delete(entity)
         }
     }
     
-    @RealmActor
     func delete(_ entities: [Entity]) async throws {
-        let realm = try await actorRealm
+        let realm = try await actor.realm
         try await realm.asyncWrite {
             realm.delete(entities)
         }
     }
     
-    @RealmActor
     func deleteAll() async throws {
         if let items: [Entity] = entities?.map({$0}), !items.isEmpty {
-            let realm = try await actorRealm
+            let realm = try await actor.realm
             try await realm.asyncWrite {
                 realm.delete(items)
             }
