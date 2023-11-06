@@ -55,6 +55,7 @@ public extension RealmProxiable {
 open class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxiable {
     public init() {}
     
+    @BackgroundActor
     public var actor: RealmActor {
         RealmActor(config: rm.createConfiguration())
     }
