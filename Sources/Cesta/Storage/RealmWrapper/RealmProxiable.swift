@@ -55,6 +55,7 @@ public extension RealmProxiable {
 open class RealmStore<RealmManager: RealmManageable, Entity: Object>: RealmProxiable {
     public init() {}
     
+    /// Provides MainActor-isolated Realm
     public var actor: RealmActor {
         RealmActor(config: rm.createConfiguration())
     }
@@ -88,25 +89,11 @@ public extension RealmStore {
     }
     
     func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) async throws {
-        return try await withCheckedThrowingContinuation { continuation in
-            rm.transaction({ (realm) in
-                realm.add(entity, update: update)
-            }) { _, err in
-                if let error = err {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume()
-                }
-            }
+        let realm = try await actor.realm
+        try await realm.asyncWrite {
+            realm.add(entity, update: update)
         }
     }
-    
-//    func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) async throws {
-//        let realm = try await actor.realm
-//        try await realm.asyncWrite {
-//            realm.add(entity, update: update)
-//        }
-//    }
     
     func append(_ entities: [Entity], update: Realm.UpdatePolicy = .modified) async throws {
         let realm = try await actor.realm
