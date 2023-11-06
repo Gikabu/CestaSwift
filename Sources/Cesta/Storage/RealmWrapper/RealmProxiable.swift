@@ -87,6 +87,7 @@ public extension RealmStore {
         })
     }
     
+    @BackgroundActor
     func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) async throws {
         let realm = try await actor.realm
         try await realm.asyncWrite {
@@ -94,6 +95,7 @@ public extension RealmStore {
         }
     }
     
+    @BackgroundActor
     func append(_ entities: [Entity], update: Realm.UpdatePolicy = .modified) async throws {
         let realm = try await actor.realm
         try await realm.asyncWrite {
@@ -113,6 +115,7 @@ public extension RealmStore {
         })
     }
     
+    @BackgroundActor
     func replace(_ entity: Entity) async throws {
         let realm = try await actor.realm
         try await realm.asyncWrite {
@@ -120,6 +123,7 @@ public extension RealmStore {
         }
     }
     
+    @BackgroundActor
     func replace(_ entities: [Entity]) async throws {
         let realm = try await actor.realm
         try await realm.asyncWrite {
@@ -147,6 +151,7 @@ public extension RealmStore {
         }
     }
     
+    @BackgroundActor
     func delete(_ entity: Entity) async throws {
         let realm = try await actor.realm
         try await realm.asyncWrite {
@@ -154,6 +159,7 @@ public extension RealmStore {
         }
     }
     
+    @BackgroundActor
     func delete(_ entities: [Entity]) async throws {
         let realm = try await actor.realm
         try await realm.asyncWrite {
@@ -161,6 +167,7 @@ public extension RealmStore {
         }
     }
     
+    @BackgroundActor
     func deleteAll() async throws {
         if let items: [Entity] = entities?.map({$0}), !items.isEmpty {
             let realm = try await actor.realm

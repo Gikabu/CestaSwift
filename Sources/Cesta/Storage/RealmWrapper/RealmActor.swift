@@ -16,7 +16,12 @@ public actor RealmActor {
     
     public var realm: Realm {
         get async throws {
-            try await Realm(configuration: self.config, actor: self)
+            try await Realm(configuration: self.config, actor: BackgroundActor.shared)
         }
     }
+}
+
+// A simple custom global actor
+@globalActor public actor BackgroundActor: GlobalActor {
+    public static var shared = BackgroundActor()
 }
