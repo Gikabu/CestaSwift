@@ -91,7 +91,7 @@ public extension RealmStore {
     
     @RealmActor
     func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) async throws {
-        let realm = try await actorRealm
+        let realm = try await Realm(configuration: rm.createConfiguration(), actor: RealmActor.shared)
         try await realm.asyncWrite {
             realm.add(entity, update: update)
         }
@@ -99,7 +99,7 @@ public extension RealmStore {
     
     @RealmActor
     func append(_ entities: [Entity], update: Realm.UpdatePolicy = .modified) async throws {
-        let realm = try await actorRealm
+        let realm = try await Realm(configuration: rm.createConfiguration(), actor: RealmActor.shared)
         try await realm.asyncWrite {
             realm.add(entities, update: update)
         }
