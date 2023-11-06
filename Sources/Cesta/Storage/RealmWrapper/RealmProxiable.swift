@@ -89,7 +89,7 @@ public extension RealmStore {
     
     func append(_ entity: Entity, update: Realm.UpdatePolicy = .modified) async throws {
         return try await withCheckedThrowingContinuation { continuation in
-            rm.performSync({ (realm) in
+            rm.transaction({ (realm) in
                 realm.add(entity, update: update)
             }) { _, err in
                 if let error = err {
