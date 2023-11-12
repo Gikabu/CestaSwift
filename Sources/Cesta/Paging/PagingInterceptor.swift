@@ -8,12 +8,12 @@
 import Foundation
 import SwiftyJSON
 
-public enum PagingInterceptResult<Number: BinaryInteger, Value: Identifiable> {
+public enum PagingInterceptResult<Number: BinaryInteger, Value> {
     case proceed(PagingRequest<Number>, handleAfterwards: Bool, _ placeholder: Page<Number, Value>?)
     case complete(Page<Number, Value>)
 }
 
-open class PagingInterceptor<Number: BinaryInteger, Value: Identifiable> {
+open class PagingInterceptor<Number: BinaryInteger, Value> {
     public init() {}
     
     open func intercept(request: PagingRequest<Number>) throws -> PagingInterceptResult<Number, Value> {
@@ -27,7 +27,7 @@ open class PagingInterceptor<Number: BinaryInteger, Value: Identifiable> {
 
 public let cacheInterceptorDefaultExpirationInterval = TimeInterval(10 * 60) // 10 min
 
-public class CacheInterceptor<Number: BinaryInteger, Value: Identifiable>: PagingInterceptor<Number, Value> {
+public class CacheInterceptor<Number: BinaryInteger, Value>: PagingInterceptor<Number, Value> {
     private let expirationInterval: TimeInterval
     private var cache = [Number: CacheEntry]()
     
@@ -62,7 +62,7 @@ public class CacheInterceptor<Number: BinaryInteger, Value: Identifiable>: Pagin
     }
 }
 
-public class LoggingInterceptor<Number: BinaryInteger, Value: Identifiable>: PagingInterceptor<Number, Value> {
+public class LoggingInterceptor<Number: BinaryInteger, Value>: PagingInterceptor<Number, Value> {
     private let logger: (String) -> Void // allows for custom logging
     
     public init(logger: ((String) -> Void)? = nil) {

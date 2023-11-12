@@ -11,7 +11,7 @@ import SwiftyJSON
 /**
  Represents a response to a single **PagingRequest** and contains an array of Values.
  */
-public class Page<Number: BinaryInteger, Value: Identifiable> {
+public class Page<Number: BinaryInteger, Value> {
     public let request: PagingRequest<Number>
     public let values: [Value]
     public let resultInfo: PageResultInfo

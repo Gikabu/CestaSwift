@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-public enum PagingState<Number: BinaryInteger, Value: Identifiable> {
+public enum PagingState<Number: BinaryInteger, Value> {
     case refreshing
     case prepending
     case appending

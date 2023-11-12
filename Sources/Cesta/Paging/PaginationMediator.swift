@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 public protocol MediatorOutput {
-    associatedtype Value: Identifiable
+    associatedtype Value
     
     static var initial: Self { get }
     
@@ -25,7 +25,7 @@ public protocol MediatorOutput {
 /**
  Default implementation of **MediatorOutput**. Can be used to jump-start custom **PaginationMediator** or when there's no need for more logic requiring a custom **MediatorOutput** implementation.
  */
-public struct DefaultMediatorOutput<Value: Identifiable>: MediatorOutput {
+public struct DefaultMediatorOutput<Value>: MediatorOutput {
     public static var initial: DefaultMediatorOutput<Value> {
         DefaultMediatorOutput(
             isRefreshing: false,
@@ -155,7 +155,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                                 isPrepending: output.isPrepending,
                                 isAppending: output.isAppending,
                                 isDeleting: false,
-                                values: page.values.unique()
+                                values: page.values
                             )
                         )
                     case .prepend(_):
@@ -166,7 +166,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                             values = Array(values.dropFirst(lastPrependPage?.values.count ?? 0))
                         }
                         lastPrependPage = page
-                        let updatedValues = (page.values + values).unique()
+                        let updatedValues = (page.values + values)
                         subject.send(
                             Output(
                                 isRefreshing: false,
@@ -184,7 +184,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                             values = Array(values.dropLast(lastAppendPage?.values.count ?? 0))
                         }
                         lastAppendPage = page
-                        let updatedValues = (values + page.values).unique()
+                        let updatedValues = (values + page.values)
                         subject.send(
                             Output(
                                 isRefreshing: false,
@@ -194,21 +194,18 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                                 values: values + page.values
                             )
                         )
-                    case .delete(_, let ids):
+                    case .delete(_,_):
                         currentPageNumber = page.number
                         var values = output.values
-                        values.removeAll { value in
-                            ids.contains(value.id)
-                        }
                         var updatedValues: [Value] = []
                         if lastAppendPage?.number == page.number {
                             values = Array(values.dropLast(lastAppendPage?.values.count ?? 0))
                             lastAppendPage = page
-                            updatedValues = (values + page.values).unique()
+                            updatedValues = (values + page.values)
                         } else if lastPrependPage?.number == page.number {
                             values = Array(values.dropFirst(lastPrependPage?.values.count ?? 0))
                             lastPrependPage = page
-                            updatedValues = (page.values + values).unique()
+                            updatedValues = (page.values + values)
                         } else {
                             updatedValues = page.values
                         }
