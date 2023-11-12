@@ -50,3 +50,10 @@ public extension Future where Failure == Error {
         }
     }
 }
+
+public extension Sequence where Iterator.Element: Identifiable {
+    func unique() -> [Iterator.Element] {
+        var seen: Set<Iterator.Element.ID> = []
+        return filter { seen.insert($0.id).inserted }
+    }
+}

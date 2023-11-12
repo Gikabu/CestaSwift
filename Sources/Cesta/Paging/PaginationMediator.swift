@@ -9,27 +9,29 @@ import Foundation
 import Combine
 
 public protocol MediatorOutput {
-    associatedtype Value
+    associatedtype Value: Identifiable
     
     static var initial: Self { get }
     
-    init(isRefreshing: Bool, isPrepending: Bool, isAppending: Bool, values: [Value])
+    init(isRefreshing: Bool, isPrepending: Bool, isAppending: Bool, isDeleting: Bool, values: [Value])
     
     var isRefreshing: Bool { get }
     var isPrepending: Bool { get }
     var isAppending: Bool { get }
+    var isDeleting: Bool { get }
     var values: [Value] { get }
 }
 
 /**
  Default implementation of **MediatorOutput**. Can be used to jump-start custom **PaginationMediator** or when there's no need for more logic requiring a custom **MediatorOutput** implementation.
  */
-public struct DefaultMediatorOutput<Value>: MediatorOutput {
+public struct DefaultMediatorOutput<Value: Identifiable>: MediatorOutput {
     public static var initial: DefaultMediatorOutput<Value> {
         DefaultMediatorOutput(
             isRefreshing: false,
             isPrepending: false,
             isAppending: false,
+            isDeleting: false,
             values: []
         )
     }
@@ -37,17 +39,20 @@ public struct DefaultMediatorOutput<Value>: MediatorOutput {
     public let isRefreshing: Bool
     public let isPrepending: Bool
     public let isAppending: Bool
+    public let isDeleting: Bool
     public let values: [Value]
     
     public init(
         isRefreshing: Bool,
         isPrepending: Bool,
         isAppending: Bool,
+        isDeleting: Bool,
         values: [Value]
     ) {
         self.isRefreshing = isRefreshing
         self.isPrepending = isPrepending
         self.isAppending = isAppending
+        self.isDeleting = isDeleting
         self.values = values
     }
 }
@@ -58,6 +63,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
     private let requestSource = PagingRequestSource<Number>()
     private let pager: Pager<Number, Value, Source>
     
+    private var currentPageNumber: Number = 1
     private var lastPrependPage: Page<Number, Value>?
     private var lastAppendPage: Page<Number, Value>?
     private let backgroundQueue = DispatchQueue(
@@ -103,6 +109,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                             isRefreshing: true,
                             isPrepending: false,
                             isAppending: false,
+                            isDeleting: false,
                             values: output.values
                         )
                     )
@@ -112,6 +119,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                             isRefreshing: false,
                             isPrepending: true,
                             isAppending: output.isAppending,
+                            isDeleting: false,
                             values: output.values
                         )
                     )
@@ -121,12 +129,24 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                             isRefreshing: false,
                             isPrepending: output.isPrepending,
                             isAppending: true,
+                            isDeleting: false,
+                            values: output.values
+                        )
+                    )
+                case .deleting:
+                    subject.send(
+                        Output(
+                            isRefreshing: false,
+                            isPrepending: false,
+                            isAppending: false,
+                            isDeleting: true,
                             values: output.values
                         )
                     )
                 case .done(let page):
                     switch page.request {
                     case .refresh(_):
+                        currentPageNumber = page.number
                         lastPrependPage = page
                         lastAppendPage = page
                         subject.send(
@@ -134,37 +154,71 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                                 isRefreshing: false,
                                 isPrepending: output.isPrepending,
                                 isAppending: output.isAppending,
-                                values: page.values
+                                isDeleting: false,
+                                values: page.values.unique()
                             )
                         )
                     case .prepend(_):
+                        currentPageNumber = page.number
                         var values = output.values
                         if lastPrependPage?.number == page.number {
                             // we're adding new items, so drop first few
                             values = Array(values.dropFirst(lastPrependPage?.values.count ?? 0))
                         }
                         lastPrependPage = page
+                        let updatedValues = (page.values + values).unique()
                         subject.send(
                             Output(
                                 isRefreshing: false,
                                 isPrepending: false,
                                 isAppending: output.isAppending,
-                                values: page.values + values
+                                isDeleting: false,
+                                values: updatedValues
                             )
                         )
                     case .append(_):
+                        currentPageNumber = page.number
                         var values = output.values
                         if lastAppendPage?.number == page.number {
                             // we're adding new items, so drop last few
                             values = Array(values.dropLast(lastAppendPage?.values.count ?? 0))
                         }
                         lastAppendPage = page
+                        let updatedValues = (values + page.values).unique()
                         subject.send(
                             Output(
                                 isRefreshing: false,
                                 isPrepending: output.isPrepending,
                                 isAppending: false,
+                                isDeleting: false,
                                 values: values + page.values
+                            )
+                        )
+                    case .delete(_, let ids):
+                        currentPageNumber = page.number
+                        var values = output.values
+                        values.removeAll { value in
+                            ids.contains(value.id)
+                        }
+                        var updatedValues: [Value] = []
+                        if lastAppendPage?.number == page.number {
+                            values = Array(values.dropLast(lastAppendPage?.values.count ?? 0))
+                            lastAppendPage = page
+                            updatedValues = (values + page.values).unique()
+                        } else if lastPrependPage?.number == page.number {
+                            values = Array(values.dropFirst(lastPrependPage?.values.count ?? 0))
+                            lastPrependPage = page
+                            updatedValues = (page.values + values).unique()
+                        } else {
+                            updatedValues = page.values
+                        }
+                        subject.send(
+                            Output(
+                                isRefreshing: false,
+                                isPrepending: output.isPrepending,
+                                isAppending: output.isAppending,
+                                isDeleting: false,
+                                values: updatedValues
                             )
                         )
                     }
@@ -201,6 +255,16 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
             }
         } else {
             refresh(userInfo: userInfo)
+        }
+    }
+    
+    public func delete(ids: Set<AnyHashable>, userInfo: PagingRequestParamsUserInfo = nil) {
+        if let lastPage = lastAppendPage, lastPage.number == currentPageNumber {
+            requestSource.send(request: .delete(lastPage.request.params, ids))
+        } else if let lastPage = lastPrependPage, lastPage.number == currentPageNumber {
+            requestSource.send(request: .delete(lastPage.request.params, ids))
+        } else {
+            requestSource.send(request: .delete(requestParams(for: currentPageNumber, userInfo: userInfo), ids))
         }
     }
     

@@ -10,9 +10,10 @@ import Foundation
 import SwiftyJSON
 
 public enum PagingRequest<Number: BinaryInteger> {
-    case refresh(PagingRequestParams<Number>),
-         prepend(PagingRequestParams<Number>),
-         append(PagingRequestParams<Number>)
+    case refresh(PagingRequestParams<Number>)
+    case prepend(PagingRequestParams<Number>)
+    case append(PagingRequestParams<Number>)
+    case delete(PagingRequestParams<Number>, Set<AnyHashable>)
 }
 
 public extension PagingRequest {
@@ -23,6 +24,8 @@ public extension PagingRequest {
         case .prepend(let params):
             return params
         case .append(let params):
+            return params
+        case .delete(let params, _):
             return params
         }
     }
@@ -39,6 +42,8 @@ public extension PagingRequest {
             return "prepend"
         case .append(_):
             return "append"
+        case .delete(_, _):
+            return "delete"
         }
     }
 }
@@ -77,7 +82,7 @@ extension PagingRequest {
         dictionary["pageSize"] = params.pageSize
         dictionary["maxRetries"] = params.retryPolicy?.maxRetries
         dictionary["info"] = JSON(info)
-        dictionary["timestamp"] = Int64(params.timestamp * 1000)
+        dictionary["timestamp"] = params.timestamp
         return dictionary
     }
 }
@@ -90,7 +95,7 @@ public struct PagingRequestParams<Number: BinaryInteger> {
     public let retryPolicy: RetryPolicy?
     public let userInfo: PagingRequestParamsUserInfo
     
-    let timestamp: TimeInterval
+    let timestamp: Int64
     
     public init(
         key: PagingKey<Number>,
@@ -103,7 +108,7 @@ public struct PagingRequestParams<Number: BinaryInteger> {
         self.retryPolicy = retryPolicy
         self.userInfo = userInfo
         
-        timestamp = NSDate().timeIntervalSince1970
+        timestamp = Int64((Date().timeIntervalSince1970 * 1000).rounded())
     }
 }
 

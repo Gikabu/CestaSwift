@@ -11,14 +11,19 @@ import SwiftyJSON
 /**
  Represents a response to a single **PagingRequest** and contains an array of Values.
  */
-public class Page<Number: BinaryInteger, Value> {
+public class Page<Number: BinaryInteger, Value: Identifiable> {
     public let request: PagingRequest<Number>
     public let values: [Value]
+    public let resultInfo: PageResultInfo
     
-    public init(request: PagingRequest<Number>,
-                values: [Value]) {
+    public init(request: PagingRequest<Number>, values: [Value], resultInfo: PageResultInfo = PageResultInfo()) {
         self.request = request
         self.values = values
+        var info = PageResultInfo()
+        for entry in resultInfo {
+            info[entry.key] = entry.value
+        }
+        self.resultInfo = info
     }
 }
 
@@ -48,6 +53,9 @@ extension Page {
         dictionary["number"] = number
         dictionary["count"] = values.count
         dictionary["request"] = request.toJSON()
+        dictionary["resultInfo"] = JSON(resultInfo)
         return dictionary
     }
 }
+
+public typealias PageResultInfo = [String: Any]

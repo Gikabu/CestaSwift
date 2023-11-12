@@ -8,14 +8,15 @@
 import Foundation
 import Combine
 
-public enum PagingState<Number: BinaryInteger, Value> {
-    case refreshing,
-         prepending,
-         appending,
-         done(Page<Number, Value>)
+public enum PagingState<Number: BinaryInteger, Value: Identifiable> {
+    case refreshing
+    case prepending
+    case appending
+    case deleting
+    case done(Page<Number, Value>)
 }
 
-private let deduplicationInterval: TimeInterval = 0.25
+private let deduplicationInterval: Int64 = 250
 
 /**
  Pager is the glue that binds all PagingSource, RequestPublisher components together, mapping requests from the publisher, passing through interceptor and finally to the paging source.
@@ -51,6 +52,8 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
                     state = .prepending
                 case .append(_):
                     state = .appending
+                case .delete(_, _):
+                    state = .deleting
                 }
                 subject.send(state)
             }).tryMap { request -> InterceptedRequest in
@@ -79,18 +82,31 @@ public class Pager<Number, Value, Source: RemoteSource> where Source.Number == N
             .flatMap { [self] intercepted -> PagingResultPublisher<Number, Value> in
                 switch intercepted.result {
                 case .proceed(let request, handleAfterwards: _, let placeholderResult):
-                    if case .refresh(_) = request, let page = placeholderResult {
-                        subject.send(.done(page))
+                    if case .delete(_, _) = request {
+                        return source.delete(request: request)
+                            .retry(times: request.params.retryPolicy?.maxRetries ?? 0,
+                                   if: request.params.retryPolicy?.shouldRetry ?? { _ in false })
+                            .handleEvents(receiveOutput: { result in
+                                for interceptor in intercepted.interceptorsToHandleAfterwards {
+                                    interceptor.handle(result: result)
+                                }
+                            })
+                            .eraseToAnyPublisher()
+                    } else {
+                        if case .refresh(_) = request, let page = placeholderResult {
+                            subject.send(.done(page))
+                        }
+                        
+                        return source.fetch(request: request)
+                            .retry(times: request.params.retryPolicy?.maxRetries ?? 0,
+                                   if: request.params.retryPolicy?.shouldRetry ?? { _ in false })
+                            .handleEvents(receiveOutput: { result in
+                                for interceptor in intercepted.interceptorsToHandleAfterwards {
+                                    interceptor.handle(result: result)
+                                }
+                            })
+                            .eraseToAnyPublisher()
                     }
-                    return source.fetch(request: request)
-                        .retry(times: request.params.retryPolicy?.maxRetries ?? 0,
-                               if: request.params.retryPolicy?.shouldRetry ?? { _ in false })
-                        .handleEvents(receiveOutput: { result in
-                            for interceptor in intercepted.interceptorsToHandleAfterwards {
-                                interceptor.handle(result: result)
-                            }
-                        })
-                        .eraseToAnyPublisher()
                 case .complete(let result):
                     return Just(result)
                         .setFailureType(to: Error.self)
