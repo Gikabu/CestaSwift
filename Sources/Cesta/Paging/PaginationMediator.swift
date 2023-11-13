@@ -191,7 +191,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                                 isPrepending: output.isPrepending,
                                 isAppending: false,
                                 isDeleting: false,
-                                values: values + page.values
+                                values: updatedValues
                             )
                         )
                     case .delete(_,_):
@@ -207,7 +207,7 @@ where Source.Number == Number, Source.Value == Value, Output.Value == Value {
                             lastPrependPage = page
                             updatedValues = (page.values + values)
                         } else {
-                            updatedValues = page.values
+                            updatedValues = (values + page.values)
                         }
                         subject.send(
                             Output(
